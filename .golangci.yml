@@ -11,6 +11,7 @@ linters-settings:
       - err
       - ok
       - p
+      - n
   revive:
     rules:
       - name: struct-tag
@@ -90,3 +91,6 @@ issues:
         - maintidx # Too strict
         - lll # Too strict
       path: '((.+)_test|testing)\.go'
+    - linters:
+        - gocyclo
+      path: 'code\.go'

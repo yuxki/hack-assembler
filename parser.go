@@ -33,8 +33,9 @@ const (
 	LCommand
 )
 
-func NewParser(r io.Reader) Parser {
+func NewParser(r io.Reader) *Parser {
 	var p Parser
+
 	p.r = r
 	p.scanner = bufio.NewScanner(r)
 	p.hasMoreCommands = true
@@ -51,7 +52,7 @@ func NewParser(r io.Reader) Parser {
 	p.regCompWithJump = regexp.MustCompile(compRegStr + `;`)
 	p.regJump = regexp.MustCompile(`;(JGT|JEQ|JGE|JLT|JNE|JLE|JMP)`)
 
-	return p
+	return &p
 }
 
 func (p *Parser) Advance() bool {
@@ -69,6 +70,10 @@ func (p *Parser) Advance() bool {
 
 func (p *Parser) HasMoreCommands() bool {
 	return p.hasMoreCommands
+}
+
+func (p *Parser) Command() string {
+	return p.scanner.Text()
 }
 
 func (p *Parser) CommandType() CommandType {
