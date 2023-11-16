@@ -1,3 +1,5 @@
 # hack-assembler
-hack Assembler Project in nand2tetris.
+Hack Assembler Project in nand2tetris, golang implementation.
 
+## Go Version
+1.21
