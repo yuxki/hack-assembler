@@ -5,14 +5,18 @@ import (
 	"fmt"
 )
 
+// Code is a struct that translates Hack assembly language mnemonics into binary codes.
 type Code struct{}
 
+// NewCode returns a new Code.
 func NewCode() Code {
 	return Code{}
 }
 
+// ErrInvalidNemonic is returned when the nemonic is invalid.
 var ErrInvalidNemonic = errors.New("invalid nemonic")
 
+// Dest returns the binary code of the dest mnemonic.
 func (c Code) Dest(n string) (string, error) {
 	if n == "" {
 		return "000", nil
@@ -39,9 +43,10 @@ func (c Code) Dest(n string) (string, error) {
 		return "111", nil
 	}
 
-	return "", fmt.Errorf("Dest:%s: %w", n, ErrInvalidNemonic)
+	return "", fmt.Errorf("could not convert a dest command:%s: %w", n, ErrInvalidNemonic)
 }
 
+// Comp returns the binary code of the comp mnemonic.
 func (c Code) Comp(n string) (string, error) {
 	if n == "0" {
 		return "0101010", nil
@@ -128,9 +133,10 @@ func (c Code) Comp(n string) (string, error) {
 		return "1010101", nil
 	}
 
-	return "", fmt.Errorf("Comp:%s: %w", n, ErrInvalidNemonic)
+	return "", fmt.Errorf("could not convert a comp command:%s: %w", n, ErrInvalidNemonic)
 }
 
+// Jump returns the binary code of the jump mnemonic.
 func (c Code) Jump(n string) (string, error) {
 	if n == "" {
 		return "000", nil
@@ -157,5 +163,5 @@ func (c Code) Jump(n string) (string, error) {
 		return "111", nil
 	}
 
-	return "", fmt.Errorf("Jump:%s: %w", n, ErrInvalidNemonic)
+	return "", fmt.Errorf("could not convert a jump command:%s: %w", n, ErrInvalidNemonic)
 }

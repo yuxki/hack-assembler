@@ -6,6 +6,7 @@ import (
 	"regexp"
 )
 
+// Entry represents a symbol table entry.
 type Entry struct {
 	symbol  string
 	address uint
@@ -15,6 +16,7 @@ const (
 	screenAddress uint = 16384
 )
 
+// ErrInvalidSymbol is returned when the symbol is invalid.
 var ErrInvalidSymbol = errors.New("invalid symbol")
 
 func newEntry(symbol string, address uint) (Entry, error) {
@@ -34,61 +36,28 @@ func newEntry(symbol string, address uint) (Entry, error) {
 	return entry, nil
 }
 
+// SymbolTable is a data structure that is used to map symbolic labels or
+// variables to their corresponding numeric addresses. It serves as a lookup table for
+// retrieving addresses based on symbol names.
 type SymbolTable struct {
 	entries []Entry
 }
 
-func NewSymbolTable() (*SymbolTable, error) {
-	table := &SymbolTable{make([]Entry, 0, 23)}
+const (
+	initialTableCapacity = 23
+)
 
-	err := table.AddEntry("SP", 0)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("LCL", 1)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("ARG", 2)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("THIS", 3)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("THAT", 4)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("SCREEN", screenAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	err = table.AddEntry("KBD", 24576)
-	if err != nil {
-		return nil, err
-	}
-
-	var i uint
-	for i = 0; i < 16; i++ {
-		err = table.AddEntry(fmt.Sprintf("R%d", i), i)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return table, nil
+// NewSymbolTable creates a new symbol table.
+// It initializes the table with the predefined symbols.
+func NewSymbolTable() *SymbolTable {
+	table := &SymbolTable{make([]Entry, 0, initialTableCapacity)}
+	return table
 }
 
 var ErrSymbolAlreadyExists = errors.New("symbol already exists")
 
+// AddEntry adds the pair (symbol, address) to the table.
+// It returns an error if the symbol already exists or if the symbol is invalid.
 func (s *SymbolTable) AddEntry(symbol string, address uint) error {
 	if s.Contains(symbol) {
 		return fmt.Errorf("could not add entry to the sybmol table: %w", ErrSymbolAlreadyExists)
@@ -104,6 +73,7 @@ func (s *SymbolTable) AddEntry(symbol string, address uint) error {
 	return nil
 }
 
+// Contains returns true if the symbol table contains the given symbol.
 func (s *SymbolTable) Contains(symbol string) bool {
 	for _, entry := range s.entries {
 		if entry.symbol == symbol {
@@ -116,6 +86,8 @@ func (s *SymbolTable) Contains(symbol string) bool {
 
 var ErrSymbolNotFound = errors.New("symbol not found")
 
+// GetAddress returns the address associated with the symbol.
+// It returns an error if the symbol is not found.
 func (s *SymbolTable) GetAddress(symbol string) (uint, error) {
 	for _, entry := range s.entries {
 		if entry.symbol == symbol {

@@ -12,6 +12,10 @@ linters-settings:
       - ok
       - p
       - n
+      - d
+    ignore-decls:
+      - r io.Reader
+      - w io.Writer
   revive:
     rules:
       - name: struct-tag
@@ -76,6 +80,8 @@ issues:
   exclude-rules:
     - linters:
         - funlen # Too strict
+        - gomnd  # Too strict
+        - forbidigo # Too strict
       path: 'main.go'
     - linters:
         - wrapcheck # Too strict

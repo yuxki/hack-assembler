@@ -280,6 +280,8 @@ const (
 )
 
 func TestAssembler_Assemble(t *testing.T) {
+	t.Parallel()
+
 	data := []struct {
 		testCase string
 		asm      string
@@ -315,22 +317,21 @@ func TestAssembler_Assemble(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.testCase, func(t *testing.T) {
-			parser := NewParser(strings.NewReader(d.asm))
-			code := NewCode()
-			symbolTable, err := NewSymbolTable()
+			t.Parallel()
+
+			writer := &bytes.Buffer{}
+
+			assembler, err := NewAssembler(strings.NewReader(d.asm), writer)
 			if err != nil {
 				t.Fatal(err)
 			}
-			writer := &bytes.Buffer{}
 
-			assembler := NewAssembler(writer, parser, code, symbolTable)
 			err = assembler.Assemble()
 			if err != nil {
 				t.Error(err)
 			}
 
 			if diff := cmp.Diff(writer.String(), d.binary); diff != "" {
-				print(writer.String())
 				t.Errorf(diff)
 			}
 		})

@@ -7,18 +7,10 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestNewSymbolTable(t *testing.T) {
-	_, err := NewSymbolTable()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestSymbolTable_AddEntry_Contains_GetAddress(t *testing.T) {
-	table, err := NewSymbolTable()
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Parallel()
+
+	table := NewSymbolTable()
 
 	data := []struct {
 		testCase string
@@ -49,6 +41,8 @@ func TestSymbolTable_AddEntry_Contains_GetAddress(t *testing.T) {
 	for _, d := range data {
 		d := d
 		t.Run(d.testCase, func(t *testing.T) {
+			t.Parallel()
+
 			err := table.AddEntry(d.symbol, d.address)
 
 			if d.err != nil {

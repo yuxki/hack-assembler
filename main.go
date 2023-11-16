@@ -9,7 +9,7 @@ import (
 )
 
 func printUsage() {
-	println("Usage: hack-assembler <asm file>")
+	fmt.Println("Usage: hack-assembler <asm file>")
 }
 
 func main() {
@@ -18,14 +18,15 @@ func main() {
 		return
 	}
 
-	if !strings.HasSuffix(os.Args[1], ".asm") {
-		println("Error: file must have .asm extension")
+	asmFile := os.Args[1]
+
+	if !strings.HasSuffix(asmFile, ".asm") {
+		fmt.Printf("Error: file must have .asm extension: %s\n", asmFile)
 		return
 	}
 
-	asmFile := os.Args[1]
 	if _, err := os.Stat(asmFile); os.IsNotExist(err) {
-		fmt.Printf("Error: asm file does not exist\n", err.Error())
+		fmt.Printf("Error: asm file does not exist: %s\n", asmFile)
 		return
 	}
 
@@ -35,13 +36,6 @@ func main() {
 	}
 	defer reader.Close()
 
-	parser := hack.NewParser(reader)
-	code := hack.NewCode()
-	symbolTable, err := hack.NewSymbolTable()
-	if err != nil {
-		panic("Error: could not create symbol table.")
-	}
-
 	outFile := strings.Replace(asmFile, ".asm", ".hack", 1)
 	writer, err := os.Create(outFile)
 	if err != nil {
@@ -49,7 +43,11 @@ func main() {
 	}
 	defer writer.Close()
 
-	assmbler := hack.NewAssembler(writer, parser, code, symbolTable)
+	assmbler, err := hack.NewAssembler(reader, writer)
+	if err != nil {
+		panic("Error: could not create assembler: " + err.Error())
+	}
+
 	err = assmbler.Assemble()
 	if err != nil {
 		fmt.Printf("Error: could not assemble file: %s\n", err.Error())
