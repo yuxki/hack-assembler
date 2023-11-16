@@ -17,6 +17,7 @@ type Parser struct {
 	r               io.Reader
 	scanner         *bufio.Scanner
 	hasMoreCommands bool
+	lineNumber      uint
 
 	regComment   *regexp.Regexp
 	regSpaceLine *regexp.Regexp
@@ -41,9 +42,7 @@ const (
 func NewParser(r io.Reader) *Parser {
 	var p Parser
 
-	p.r = r
-	p.scanner = bufio.NewScanner(r)
-	p.hasMoreCommands = true
+	p.Reset(r)
 
 	p.regComment = regexp.MustCompile(`//.*$`)
 	p.regSpaceLine = regexp.MustCompile(`^\s*$`)
@@ -65,6 +64,11 @@ func (p *Parser) Advance() bool {
 		if p.regSpaceLine.MatchString(line) {
 			continue
 		}
+
+		if p.CommandType() != LCommand {
+			p.lineNumber++
+		}
+
 		return true
 	}
 	p.hasMoreCommands = false
@@ -150,4 +154,15 @@ func (p *Parser) Jump() (string, error) {
 	}
 
 	return "", nil
+}
+
+func (p *Parser) LineNumber() uint {
+	return p.lineNumber
+}
+
+func (p *Parser) Reset(r io.Reader) {
+	p.r = r
+	p.scanner = bufio.NewScanner(r)
+	p.hasMoreCommands = true
+	p.lineNumber = 0
 }

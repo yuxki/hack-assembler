@@ -6,21 +6,29 @@ import (
 	"io"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type Assembler struct {
-	w      io.Writer
-	parser *Parser
-	code   Code
+	w           io.Writer
+	parser      *Parser
+	code        Code
+	symbolTable *SymbolTable
+	nextAddress uint
 }
 
-func NewAssembler(w io.Writer, parser *Parser, code Code) *Assembler {
-	return &Assembler{w: w, parser: parser, code: code}
+func NewAssembler(w io.Writer, parser *Parser, code Code, symbolTable *SymbolTable) *Assembler {
+	return &Assembler{w: w, parser: parser, code: code, symbolTable: symbolTable, nextAddress: 16}
 }
 
 var ErrInvalidCommand = errors.New("invalid command")
 
 func (a *Assembler) Assemble() error {
+	err := a.createSymbolTable()
+	if err != nil {
+		return err
+	}
+
 	for a.parser.Advance() {
 		binary := ""
 		switch a.parser.CommandType() {
@@ -30,11 +38,26 @@ func (a *Assembler) Assemble() error {
 				return err
 			}
 			if regexp.MustCompile(`^\d+$`).MatchString(symbol) {
-				symInt, err := strconv.Atoi(symbol)
+				address, err := strconv.Atoi(symbol)
 				if err != nil {
 					return err
 				}
-				binary = fmt.Sprintf("0%015b", symInt)
+				binary = fmt.Sprintf("0%015b", address)
+			} else {
+				if a.symbolTable.Contains(symbol) {
+					address, err := a.symbolTable.GetAddress(symbol)
+					if err != nil {
+						return err
+					}
+					binary = fmt.Sprintf("0%015b", address)
+				} else {
+					err := a.symbolTable.AddEntry(symbol, a.nextAddress)
+					if err != nil {
+						return err
+					}
+					binary = fmt.Sprintf("0%015b", a.nextAddress)
+					a.nextAddress++
+				}
 			}
 		case CCommand:
 			dest, err := a.parser.Dest()
@@ -69,6 +92,9 @@ func (a *Assembler) Assemble() error {
 			}
 
 			binary = fmt.Sprintf("111%s%s%s", cBits, dBits, jBits)
+
+		case LCommand:
+			continue
 		}
 		if binary == "" {
 			return fmt.Errorf("could not assemble binary with %s: %w", a.parser.Command(), ErrInvalidCommand)
@@ -78,5 +104,31 @@ func (a *Assembler) Assemble() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (a *Assembler) createSymbolTable() error {
+	commands := ""
+
+	for a.parser.Advance() {
+		commands += a.parser.Command() + "\n"
+
+		switch a.parser.CommandType() {
+		case LCommand:
+			symbol, err := a.parser.Symbol()
+			if err != nil {
+				return err
+			}
+			err = a.symbolTable.AddEntry(symbol, a.parser.LineNumber())
+			if err != nil {
+				return err
+			}
+		default:
+			continue
+		}
+	}
+
+	a.parser.Reset(strings.NewReader(commands))
+
 	return nil
 }
