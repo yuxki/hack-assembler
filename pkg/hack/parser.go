@@ -51,7 +51,7 @@ func NewParser(r io.Reader) *Parser {
 	p.regLCommandSymbol = regexp.MustCompile(`^\s*\(([a-z-A-Z_.$:][0-9a-z-A-Z_.$:]*)\)`)
 
 	p.regDest = regexp.MustCompile(`^\s*(M|D|MD|A|AM|AD|AMD)=`)
-	p.regComp = regexp.MustCompile(`(D\+1|A\+1|D-1|A-1|D\+A|D-A|A-D|D&A|D\|A|M\+1|M-1|D\+M|D-M|M-D|D&M|0|1|-1|D|A|!D|!A|-D|-A|M|M|!M|-M)`)
+	p.regComp = regexp.MustCompile(`^(D\+1|A\+1|D-1|A-1|D\+A|D-A|A-D|D&A|D\|A|M\+1|M-1|D\+M|D-M|M-D|D\|M|D&M|0|1|-1|D|A|!D|!A|-D|-A|M|M|!M|-M)$`)
 	p.regJump = regexp.MustCompile(`;(JGT|JEQ|JGE|JLT|JNE|JLE|JMP)`)
 
 	return &p

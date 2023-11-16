@@ -37,6 +37,10 @@ func main() {
 
 	parser := hack.NewParser(reader)
 	code := hack.NewCode()
+	symbolTable, err := hack.NewSymbolTable()
+	if err != nil {
+		panic("Error: could not create symbol table.")
+	}
 
 	outFile := strings.Replace(asmFile, ".asm", ".hack", 1)
 	writer, err := os.Create(outFile)
@@ -45,7 +49,7 @@ func main() {
 	}
 	defer writer.Close()
 
-	assmbler := hack.NewAssembler(writer, parser, code)
+	assmbler := hack.NewAssembler(writer, parser, code, symbolTable)
 	err = assmbler.Assemble()
 	if err != nil {
 		fmt.Printf("Error: could not assemble file: %s\n", err.Error())
