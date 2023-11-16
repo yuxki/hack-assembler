@@ -1,7 +1,8 @@
-package main
+package hack
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Code struct{}
@@ -38,7 +39,7 @@ func (c Code) Dest(n string) (string, error) {
 		return "111", nil
 	}
 
-	return "", ErrInvalidNemonic
+	return "", fmt.Errorf("Dest:%s: %w", n, ErrInvalidNemonic)
 }
 
 func (c Code) Comp(n string) (string, error) {
@@ -127,7 +128,7 @@ func (c Code) Comp(n string) (string, error) {
 		return "1010101", nil
 	}
 
-	return "", ErrInvalidNemonic
+	return "", fmt.Errorf("Comp:%s: %w", n, ErrInvalidNemonic)
 }
 
 func (c Code) Jump(n string) (string, error) {
@@ -156,5 +157,5 @@ func (c Code) Jump(n string) (string, error) {
 		return "111", nil
 	}
 
-	return "", ErrInvalidNemonic
+	return "", fmt.Errorf("Jump:%s: %w", n, ErrInvalidNemonic)
 }

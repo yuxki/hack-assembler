@@ -1,11 +1,17 @@
-package main
+package hack
 
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
+	"strings"
 )
+
+func removeComment(line string) string {
+	return strings.Split(line, "//")[0]
+}
 
 type Parser struct {
 	r               io.Reader
@@ -19,10 +25,9 @@ type Parser struct {
 
 	regLCommandSymbol *regexp.Regexp
 
-	regDest         *regexp.Regexp
-	regCompWithDest *regexp.Regexp
-	regCompWithJump *regexp.Regexp
-	regJump         *regexp.Regexp
+	regDest *regexp.Regexp
+	regComp *regexp.Regexp
+	regJump *regexp.Regexp
 }
 
 type CommandType int
@@ -47,9 +52,7 @@ func NewParser(r io.Reader) *Parser {
 	p.regLCommandSymbol = regexp.MustCompile(`^\s*\(([a-z-A-Z_.$:][0-9a-z-A-Z_.$:]*)\)`)
 
 	p.regDest = regexp.MustCompile(`^\s*(M|D|MD|A|AM|AD|AMD)=`)
-	compRegStr := `(D\+1|A\+1|D-1|A-1|D\+A|D-A|A-D|D&A|D\|A|M|!M|-M|M\+1|M-1|D\+M|D-M|M-D|D&M|D\|0|1|-1|D|A|!D|!A|-D|-A|M)`
-	p.regCompWithDest = regexp.MustCompile(`=` + compRegStr)
-	p.regCompWithJump = regexp.MustCompile(compRegStr + `;`)
+	p.regComp = regexp.MustCompile(`(D\+1|A\+1|D-1|A-1|D\+A|D-A|A-D|D&A|D\|A|M\+1|M-1|D\+M|D-M|M-D|D&M|0|1|-1|D|A|!D|!A|-D|-A|M|M|!M|-M)`)
 	p.regJump = regexp.MustCompile(`;(JGT|JEQ|JGE|JLT|JNE|JLE|JMP)`)
 
 	return &p
@@ -118,20 +121,23 @@ func (p *Parser) Dest() (string, error) {
 	return "", nil
 }
 
+var ErrInvalidCompCommand = errors.New("Invalid comp")
+
 func (p *Parser) Comp() (string, error) {
 	if p.CommandType() != CCommand {
 		return "", ErrNonCCommand
 	}
 
-	if p.regCompWithDest.MatchString(p.scanner.Text()) {
-		return p.regCompWithDest.FindStringSubmatch(p.scanner.Text())[1], nil
+	command := removeComment(p.scanner.Text())
+	command = p.regDest.ReplaceAllString(command, "")
+	command = p.regJump.ReplaceAllString(command, "")
+	command = strings.TrimSpace(command)
+
+	if p.regComp.MatchString(command) {
+		return p.regComp.FindStringSubmatch(command)[1], nil
 	}
 
-	if p.regCompWithJump.MatchString(p.scanner.Text()) {
-		return p.regCompWithJump.FindStringSubmatch(p.scanner.Text())[1], nil
-	}
-
-	return "", nil
+	return "", fmt.Errorf("%s: %w", command, ErrInvalidCompCommand)
 }
 
 func (p *Parser) Jump() (string, error) {
@@ -140,7 +146,7 @@ func (p *Parser) Jump() (string, error) {
 	}
 
 	if p.regJump.MatchString(p.scanner.Text()) {
-		return p.regJump.FindStringSubmatch(p.scanner.Text())[1], nil
+		return p.regJump.FindStringSubmatch(removeComment(p.scanner.Text()))[1], nil
 	}
 
 	return "", nil

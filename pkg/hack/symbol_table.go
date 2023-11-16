@@ -1,4 +1,4 @@
-package main
+package hack
 
 // type Entry struct {
 // 	symbol  string
